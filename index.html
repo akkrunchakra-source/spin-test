@@ -1,145 +1,150 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Spin Test Demo</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-  <style>
-    body {
-      margin: 0;
-      padding: 0;
-      font-family: Arial, sans-serif;
-      background: #0f172a;
-      color: #fff;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
-    }
-
-    h1 {
-      margin-bottom: 10px;
-    }
-
-    canvas {
-      background: #111;
-      border-radius: 50%;
-      margin-top: 20px;
-    }
-
-    button {
-      margin-top: 20px;
-      padding: 12px 30px;
-      font-size: 18px;
-      background: #22c55e;
-      border: none;
-      border-radius: 8px;
-      color: #000;
-      cursor: pointer;
-      font-weight: bold;
-    }
-
-    button:disabled {
-      background: #555;
-      cursor: not-allowed;
-    }
-
-    #result {
-      margin-top: 15px;
-      font-size: 20px;
-      font-weight: bold;
-      color: #facc15;
-    }
-  </style>
+<meta charset="UTF-8">
+<title>Lucky Spin - Demo</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+body{
+  margin:0;
+  font-family: Arial, sans-serif;
+  background: linear-gradient(180deg,#6a11cb,#2575fc);
+  color:#fff;
+  text-align:center;
+}
+h1{margin:15px 0;}
+#wrapper{max-width:400px;margin:auto;padding:10px;}
+canvas{
+  background:#fff;
+  border-radius:50%;
+}
+button{
+  margin-top:15px;
+  padding:12px 40px;
+  font-size:18px;
+  border:none;
+  border-radius:30px;
+  background:#ff5252;
+  color:#fff;
+}
+#result{
+  margin:15px 0;
+  font-size:20px;
+  font-weight:bold;
+}
+#activity{
+  background:#1e3fa3;
+  padding:12px;
+  border-radius:12px;
+  margin-top:20px;
+  text-align:left;
+}
+#activity h3{text-align:center;margin-top:0;}
+small{opacity:.8;}
+</style>
 </head>
 
 <body>
+<div id="wrapper">
+<h1>🎡 Lucky Spin</h1>
 
-  <h1>🎯 Spin Wheel (Demo)</h1>
+<canvas id="wheel" width="300" height="300"></canvas>
 
-  <canvas id="wheel" width="300" height="300"></canvas>
+<button onclick="spin()">SPIN</button>
 
-  <button id="spinBtn" onclick="spin()">SPIN</button>
+<div id="result"></div>
 
-  <div id="result"></div>
+<div id="activity">
+<h3>Live Activity (Demo)</h3>
+<div id="log"></div>
+</div>
 
-  <script>
-    const canvas = document.getElementById("wheel");
-    const ctx = canvas.getContext("2d");
+<br>
+<small>Demo/Test Only – No Real Money</small>
+</div>
 
-    const options = ["₹5", "₹10", "₹20", "₹50", "₹100", "Try Again"];
-    const colors = ["#ef4444", "#22c55e", "#3b82f6", "#eab308", "#a855f7", "#64748b"];
+<script>
+const amounts = ["₹100","₹20","₹10","₹30","₹5","₹1500","₹50"];
+const colors = ["#ff7675","#74b9ff","#55efc4","#ffeaa7","#fd79a8","#a29bfe","#81ecec"];
 
-    let startAngle = 0;
-    let spinning = false;
+const canvas = document.getElementById("wheel");
+const ctx = canvas.getContext("2d");
+const size = canvas.width;
+const center = size/2;
+const arc = 2*Math.PI/amounts.length;
+let angle = 0;
 
-    function drawWheel() {
-      const arc = Math.PI * 2 / options.length;
+function drawWheel(){
+  for(let i=0;i<amounts.length;i++){
+    ctx.beginPath();
+    ctx.fillStyle = colors[i];
+    ctx.moveTo(center,center);
+    ctx.arc(center,center,center,arc*i+angle,arc*(i+1)+angle);
+    ctx.fill();
 
-      for (let i = 0; i < options.length; i++) {
-        const angle = startAngle + i * arc;
+    ctx.save();
+    ctx.translate(center,center);
+    ctx.rotate(arc*i+arc/2+angle);
+    ctx.textAlign="right";
+    ctx.fillStyle="#000";
+    ctx.font="bold 16px Arial";
+    ctx.fillText(amounts[i], center-10, 5);
+    ctx.restore();
+  }
 
-        ctx.beginPath();
-        ctx.fillStyle = colors[i];
-        ctx.moveTo(150, 150);
-        ctx.arc(150, 150, 150, angle, angle + arc);
-        ctx.fill();
+  // arrow
+  ctx.fillStyle="#000";
+  ctx.beginPath();
+  ctx.moveTo(center-10,5);
+  ctx.lineTo(center+10,5);
+  ctx.lineTo(center,25);
+  ctx.fill();
+}
+drawWheel();
 
-        ctx.save();
-        ctx.translate(150, 150);
-        ctx.rotate(angle + arc / 2);
-        ctx.textAlign = "right";
-        ctx.fillStyle = "#000";
-        ctx.font = "bold 16px Arial";
-        ctx.fillText(options[i], 130, 5);
-        ctx.restore();
-      }
-    }
+function spin(){
+  const spinAngle = Math.random()*3000 + 2000;
+  const duration = 3000;
+  const start = performance.now();
 
-    function spin() {
-      if (spinning) return;
-
-      spinning = true;
-      document.getElementById("spinBtn").disabled = true;
-      document.getElementById("result").innerText = "";
-
-      const spinAngle = Math.random() * 3000 + 2000;
-      const duration = 3000;
-      const start = performance.now();
-
-      function animate(time) {
-        const progress = Math.min((time - start) / duration, 1);
-        startAngle = spinAngle * progress * Math.PI / 180;
-        ctx.clearRect(0, 0, 300, 300);
-        drawWheel();
-
-        if (progress < 1) {
-          requestAnimationFrame(animate);
-        } else {
-          finishSpin();
-        }
-      }
-
-      requestAnimationFrame(animate);
-    }
-
-    function finishSpin() {
-      const arc = Math.PI * 2 / options.length;
-      const index = Math.floor(
-        (options.length - (startAngle % (Math.PI * 2)) / arc) % options.length
-      );
-
-      document.getElementById("result").innerText =
-        "Result: " + options[index];
-
-      spinning = false;
-      document.getElementById("spinBtn").disabled = false;
-    }
-
+  function animate(now){
+    const progress = Math.min((now-start)/duration,1);
+    angle += (spinAngle/360)*progress*0.05;
+    ctx.clearRect(0,0,size,size);
     drawWheel();
-  </script>
+    if(progress<1){
+      requestAnimationFrame(animate);
+    }else{
+      showResult();
+    }
+  }
+  requestAnimationFrame(animate);
+}
 
+function showResult(){
+  const index = Math.floor(((2*Math.PI - angle%(2*Math.PI)) / arc)) % amounts.length;
+  document.getElementById("result").innerText = "You won " + amounts[index];
+}
+
+// live activity demo
+const demoLogs = [
+ "90****4455 withdrawn ₹50",
+ "87****1122 withdrawn ₹10",
+ "91****7788 withdrawn ₹100",
+ "98****3344 withdrawn ₹20",
+ "92****6677 withdrawn ₹30"
+];
+
+function addLog(){
+  const log = document.getElementById("log");
+  const item = document.createElement("div");
+  item.textContent = demoLogs[Math.floor(Math.random()*demoLogs.length)];
+  log.prepend(item);
+  if(log.children.length>6){
+    log.removeChild(log.lastChild);
+  }
+}
+setInterval(addLog,3000);
+</script>
 </body>
 </html>
